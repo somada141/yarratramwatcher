@@ -77,14 +77,18 @@ def get_next_arrivals(client, stop_tracker_id, route_number, convert_utc=True):
     msg_fmt = msg.format(stop_tracker_id, route_number)
     logger.info(msg_fmt)
 
+    # perform `GetNextPredictedRoutesCollection` request for the given stop and tram
+    # number
     response = client.service.GetNextPredictedRoutesCollection(stopNo=stop_tracker_id, 
                                                                routeNo=route_number, 
                                                                lowFloor=False)
 
+    # get the prediction result list
     result = response.GetNextPredictedRoutesCollectionResult
-
     predictions = result.diffgram[0].DocumentElement[0].ToReturn
 
+    # loop over the predicted arrivals, parse the datetimes, and (optionally) convert
+    # the datetimes to UTC
     arrivals = []
     for prediction in predictions:
         tzutc = pytz.timezone("UTC")
@@ -105,11 +109,14 @@ def get_seconds_till_arrivals(client, stop_tracker_id, route_number):
     msg_fmt = msg.format(stop_tracker_id, route_number)
     logger.info(msg_fmt)
 
+    # get the UTC arrival datetimes for the given tram stop and number
     arrivals = get_next_arrivals(client=client, 
                                  stop_tracker_id=stop_tracker_id, 
                                  route_number=route_number,
                                  convert_utc=True)
 
+    # calculate the number of seconds between now and the different
+    # arrival times
     seconds_arrivals = []
     for arrival in arrivals:
         tzutc = pytz.timezone("UTC")
