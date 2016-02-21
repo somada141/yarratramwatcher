@@ -129,15 +129,16 @@ def get_seconds_till_arrivals(client, stop_tracker_id, route_number):
     return seconds_arrivals
 
 
-def notify_ifttt():
-    """Notifies IFTTT's Maker that an `tram86to119in5min` has occured"""
+def notify_ifttt(event, key):
+    """Notifies IFTTT's Maker that an `event` has occured"""
 
-    msg = u"Posting IFTTT notification with event name 'tram86to119in5min'"
-    msg_fmt = msg.format(stop_tracker_id, route_number, seconds_arrivals)
-    logger.info(msg_fmt)    
+    msg = u"Posting IFTTT notification with event name '{0}'"
+    msg_fmt = msg.format(event)
+    logger.info(msg_fmt)
 
     # set the IFTTT Maker URL
-    url_ifttt = "https://maker.ifttt.com/trigger/tram86to119in5min/with/key/bZzbMye0tNWTN9IUMxvBm4"
+    url_ifttt = "https://maker.ifttt.com/trigger/{event}/with/key/{key}"
+    url_ifttt = url_ifttt.format(event=event, key=key)
 
     # perform a GET request
     response = requests.get(url_ifttt)
