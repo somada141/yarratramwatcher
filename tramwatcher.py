@@ -1,13 +1,3 @@
-"""
-
-References:
-
-- API Docs: http://ws.tramtracker.com.au/pidsservice/pids.asmx
-- Schema: http://ws.tramtracker.com.au/pidsservice/pids.asmx?WSDL
-- Usage Example: https://citycontrolpanel.com/api/example_scripts?l=PYTHON&fi=0
-"""
-
-
 import logging
 import datetime
 import argparse
@@ -33,7 +23,7 @@ def create_client():
     # dodgy to fix the `TypeNotFound` error. Solution based on information from
     # https://bitbucket.org/jurko/suds/issues/20/typenotfound-schema
     imp = Import('http://www.w3.org/2001/XMLSchema', 
-        location='http://www.w3.org/2001/XMLSchema.xsd')
+                 location='http://www.w3.org/2001/XMLSchema.xsd')
     imp.filter.add("http://microsoft.com/wsdl/types/")
     doctor = ImportDoctor(imp)
 
