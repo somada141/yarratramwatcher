@@ -10,7 +10,7 @@ References:
 
 import logging
 import datetime
-import time
+import argparse
 
 import dateutil.parser
 import pytz
@@ -146,35 +146,69 @@ def notify_ifttt(event, key):
     return response
 
 
-def main():
+def main(arguments):
     """"""
-
-    stop_tracker_id = 3551
-    route_number = 86
-
     client = create_client()
 
-    arrivals = get_next_arrivals(client=client,
-                                 stop_tracker_id=stop_tracker_id,
-                                 route_number=route_number,
-                                 convert_utc=False)
-
-    msg = u"Arrival times for stop '{0}' and route '{1}': '{2}'"
-    msg_fmt = msg.format(stop_tracker_id, route_number, arrivals)
-    logger.info(msg_fmt)
-
     seconds_arrivals = get_seconds_till_arrivals(client=client,
-                                                 stop_tracker_id=stop_tracker_id,
-                                                 route_number=route_number)
+                                                 stop_tracker_id=arguments.stop_tracker_id,
+                                                 route_number=arguments.route_number)
 
     msg = u"Seconds till next arrivals for stop '{0}' and route '{1}': '{2}'"
-    msg_fmt = msg.format(stop_tracker_id, route_number, seconds_arrivals)
+    msg_fmt = msg.format(arguments.stop_tracker_id, 
+                         arguments.route_number, 
+                         seconds_arrivals)
     logger.info(msg_fmt)    
 
     for seconds in seconds_arrivals:
-        if (seconds >= 4*60) and (seconds <=6*60):
-            print notify_ifttt()
+        if ((seconds >= arguments.threshold_min_lower * 60) and 
+            (seconds <= arguments.threshold_min_upper * 60)):
+
+            msg = u"Tram '{0}' arriving at stop '{1}' within '{2}' and '{3}' minutes"
+            msg_fmt = msg.format(arguments.route_number,
+                                 arguments.stop_tracker_id,
+                                 arguments.threshold_min_lower,
+                                 arguments.threshold_min_upper)
+            print notify_ifttt(event=arguments.ifttt_event, key=arguments.ifttt_key)
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description='Yarra Trams watcher and IFTTT notifier')
+    parser.add_argument("--stop-tracker-id",
+                        dest="stop_tracker_id", 
+                        type=int,
+                        default=3551,
+                        help="Stop number as it appears in TramTracker",
+                        required=False)
+    parser.add_argument("--route-number",
+                        dest="route_number", 
+                        type=int,
+                        default=86,
+                        help="Tram/route number as defined in the YarraTrams network",
+                        required=False)
+    parser.add_argument("--threshold-min-lower",
+                        dest="threshold_min_lower", 
+                        type=int,
+                        default=4,
+                        help="Lower minute threshold for event triggering",
+                        required=False)
+    parser.add_argument("--threshold-min-upper",
+                        dest="threshold_min_upper", 
+                        type=int,
+                        default=6,
+                        help="Upper minute threshold for event triggering",
+                        required=False)
+    parser.add_argument("--ifttt-event",
+                        dest="ifttt_event", 
+                        type=str,
+                        default="tram86to119in5min",
+                        help="IFTTT Maker event to be triggered",
+                        required=False)
+    parser.add_argument("--ifttt-key",
+                        dest="ifttt_key", 
+                        type=str,
+                        default="bZzbMye0tNWTN9IUMxvBm4",
+                        help="IFTTT Maker event to be triggered",
+                        required=False)
+    arguments_cli = parser.parse_args()
+    main(arguments=arguments_cli)
